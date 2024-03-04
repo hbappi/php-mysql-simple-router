@@ -121,7 +121,6 @@ class Router
 
 
 
-<<<<<<< HEAD
         if (isset($dest)) {
 
             $dest->mws = $middlewares;
@@ -129,10 +128,6 @@ class Router
             if (!isset($dest->fullpath)) {
                 $dest->fullpath = $path;
             }
-=======
-        if (isset($dest) && !isset($dest->fullpath)) {
-            $dest->fullpath = $path;
->>>>>>> 17e3e3a33fb8faa5a9061dd34c1a155551f8a810
         }
 
 
@@ -206,11 +201,7 @@ class Router
 
         $dest = $this->getSafeDestination($method, $path);
 
-<<<<<<< HEAD
         if (!isset($dest) || !is_array($dest->handler)) {
-=======
-        if (!isset($dest)) {
->>>>>>> 17e3e3a33fb8faa5a9061dd34c1a155551f8a810
             echo "404 : '$method:$path' Path Not Found";
             return;
         }
