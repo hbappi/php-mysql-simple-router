@@ -74,7 +74,7 @@ class Router
         }
 
 
-        if ($method != 'ANY') {
+        if (!isset($dest) && $method != 'ANY') {
 
             if (isset($this->childs['ANY'])) {
                 $method = 'ANY';
@@ -100,7 +100,7 @@ class Router
 
 
 
-        if (!isset($dest->fullpath)) {
+        if (isset($dest) && !isset($dest->fullpath)) {
             $dest->fullpath = $path;
         }
 
@@ -173,7 +173,7 @@ class Router
         $dest = $this->getSafeDestination($method, $path);
 
         if (!isset($dest)) {
-            echo '404 Not Found';
+            echo "404 : '$method:$path' Path Not Found";
             return;
         }
 
