@@ -5,10 +5,7 @@ SELECT
 from
 	naz.category c
 where
-	case
-		when :search_query is not null then c.title like concat('%', :search_query,'%')
-		else true
-    end
+	(:search_query = '' OR c.title LIKE CONCAT('%', :search_query, '%'))
 order by
 	c.ordinal asc
 limit
