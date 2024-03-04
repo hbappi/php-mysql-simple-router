@@ -1,6 +1,8 @@
 <?php
 
-require_once dirname(__FILE__) . "/infrastructure/Db.php";
+
+require_once __DIR__ . "/infrastructure/Db.php";
+require_once __DIR__ . "/infrastructure/Controller.php";
 require_once __DIR__ . "/infrastructure/Router.php";
 
 

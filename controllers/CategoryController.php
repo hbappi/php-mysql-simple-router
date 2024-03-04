@@ -1,6 +1,4 @@
 <?php
-require_once(dirname(__FILE__) . "/../infrastructure/Controller.php");
-
 class CategoryController extends Controller
 {
     public function __construct()

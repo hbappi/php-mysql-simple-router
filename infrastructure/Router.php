@@ -48,7 +48,7 @@ class Router
             return;
         }
 
-        requireFileOnce($fullPath);
+        AutoLoader::requireFileOnce($fullPath);
 
         // Using the autoloader to dynamically load the controller class
         if (!class_exists($controllerClass)) {
