@@ -4,11 +4,11 @@
 
 class Route
 {
+    public $mws = array(); // this will be used only to store all middleware while dispatching...
     public $childs = array();
     public $middleware = array();
     public $handler = null;
     public $fullpath = null;
-    private static $instance = null;
 }
 
 
@@ -41,14 +41,32 @@ class Router
     {
         // $path = "/api/category/paginate";
 
+        $path = '-' . $path;
+
         $parts = explode('/', trim($path, '/'));
+        // echo json_encode($parts);
+        // $parts = explode('/', $path);
 
         // print_r($parts);
         return $parts;
     }
 
+
+    function getMiddlewaresFromDestination($dest)
+    {
+        $middlewares = array();
+
+        if (is_array($dest->middleware)) {
+            $middlewares =  $dest->middleware;
+        }
+
+        return $middlewares;
+    }
+
     function getSafeDestination($method, $path)
     {
+
+        $middlewares = array();
 
         if (isset($this->childs[$method])) {
             $dest = $this->childs[$method];
@@ -67,14 +85,16 @@ class Router
         foreach ($parts as $part) {
             if (!isset($dest->childs[$part])) {
                 $dest =  null;
+                $middlewares = array();
                 break;
             }
 
             $dest = $dest->childs[$part];
+            $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
         }
 
 
-        if ($method != 'ANY') {
+        if (!isset($dest) && $method != 'ANY') {
 
             if (isset($this->childs['ANY'])) {
                 $method = 'ANY';
@@ -95,14 +115,23 @@ class Router
                 }
 
                 $dest = $dest->childs[$part];
+                $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
             }
         }
 
 
 
-        if (!isset($dest->fullpath)) {
-            $dest->fullpath = $path;
+        if (isset($dest)) {
+
+            $dest->mws = $middlewares;
+
+            if (!isset($dest->fullpath)) {
+                $dest->fullpath = $path;
+            }
         }
+
+
+
 
         return $dest;
     }
@@ -172,14 +201,16 @@ class Router
 
         $dest = $this->getSafeDestination($method, $path);
 
-        if (!isset($dest)) {
-            echo '404 Not Found';
+        if (!isset($dest) || !is_array($dest->handler)) {
+            echo "404 : '$method:$path' Path Not Found";
             return;
         }
 
-        $middleware = $dest->middleware;
+        $mws = $dest->mws;
         $handler = $dest->handler;
 
+
+        // echo 'middleware found : ' . json_encode($mws);
 
 
         // //check whether route added with or without trailing slash.
@@ -197,7 +228,7 @@ class Router
 
         // $handler = $routes['GET']['/test'];
 
-        if (!is_array($handler) || count($handler) != 2) {
+        if (count($handler) != 2) {
             echo '500 Internal Server Error';
             return;
         }

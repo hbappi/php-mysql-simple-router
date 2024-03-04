@@ -3,6 +3,7 @@
 
 return function ($router) {
 
+    $router->use("/", ['TestMiddleware']);
     $router->use("/api", ['CookiesMiddleware']);
 
     $router->post("/api/category/paginate", ['CategoryController', 'paginate']);
