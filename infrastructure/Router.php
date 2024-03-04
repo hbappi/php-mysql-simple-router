@@ -53,6 +53,7 @@ class Router
         if (isset($this->childs[$method])) {
             $dest = $this->childs[$method];
         } else if (isset($this->childs['ANY'])) {
+            $method = 'ANY';
             $dest = $this->childs['ANY'];
         }
 
@@ -64,12 +65,39 @@ class Router
         $parts = $this->getParts($path);
 
         foreach ($parts as $part) {
-            if (isset($dest->childs[$part])) {
-                $dest = $dest->childs[$part];
-            } else {
+            if (!isset($dest->childs[$part])) {
+                $dest =  null;
+                break;
+            }
+
+            $dest = $dest->childs[$part];
+        }
+
+
+        if ($method != 'ANY') {
+
+            if (isset($this->childs['ANY'])) {
+                $method = 'ANY';
+                $dest = $this->childs['ANY'];
+            }
+
+            if (!isset($dest)) {
                 return null;
             }
+
+
+            $parts = $this->getParts($path);
+
+            foreach ($parts as $part) {
+                if (!isset($dest->childs[$part])) {
+                    $dest =  null;
+                    break;
+                }
+
+                $dest = $dest->childs[$part];
+            }
         }
+
 
 
         if (!isset($dest->fullpath)) {
