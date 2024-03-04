@@ -8,11 +8,10 @@ class CategoryController extends Controller
     public function paginate()
     {
 
-        $payload = [
-            'limit' => 10,
-            'offset' => 0,
-            'search_query' => ''
-        ];
+        $payload = parent::getJsonBody();
+
+        // return $payload;
+
 
         return parent::dbExec('__category_paginate', $payload);
     }
