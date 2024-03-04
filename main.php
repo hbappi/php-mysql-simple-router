@@ -1,9 +1,8 @@
 <?php
 
+define('ABSPATH', __DIR__);
 
-require_once __DIR__ . "/infrastructure/Db.php";
-require_once __DIR__ . "/infrastructure/Controller.php";
-require_once __DIR__ . "/infrastructure/Router.php";
+require_once ABSPATH . "/infrastructure/RequireAll.php";
 
 
 if (isset($_SERVER['REQUEST_URI'])) {
@@ -15,7 +14,7 @@ if (isset($_SERVER['REQUEST_URI'])) {
     // Now $queryParams contains an associative array of parameters
     // Extract the solid path (path without query parameters)
     $path = $urlComponents['path'] ?? '';
-    (new Router())->dispatch($_SERVER['REQUEST_METHOD'], rtrim($path, '/'));
+    Router::getInstance()->dispatch($_SERVER['REQUEST_METHOD'], rtrim($path, '/'));
 } else {
     // Handle the case where the requested path is not set
     echo "Unable to determine requested path\n";

@@ -126,16 +126,38 @@ class Db
 
         $stmt = $this->getStmt($sql, $payload);
 
-        // Execute the query
-        $stmt->execute();
+        $results = array();
 
-        // Fetch the results
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Use the results
-        // echo '<pre>', print_r($results, true), '</pre>';
+        try {
 
-        // print_r($results);
+
+            // $stmt->debugDumpParams();
+            // Execute the query
+            $stmt->execute();
+
+            // Fetch the results
+            $results['ret_data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Use the resultss
+            // echo '<pre>', print_r($results, true), '</pre>';
+
+            // print_r($resultss);
+        } catch (PDOException $e) {
+
+            $results['error'] = [
+                "info" => $e->errorInfo,
+                "message" => "Error while executing '$sqlPath' .  ###ERR: " . $e->getMessage(),
+                "trace" => $e->getTrace(),
+                // "sql" => $stmt->debugDumpParams(),
+            ];
+        }
+
+        // // Execute the query
+        // $stmt->execute();
+        // // Fetch the results
+        // $results['ret_data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 
         return $results;
     }
