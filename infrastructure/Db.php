@@ -33,6 +33,82 @@ class Db
         }
     }
 
+
+    private function getStmt($sql, $payload)
+    {
+
+        // Prepare the SQL statement
+        $stmt = $this->pdo->prepare($sql);
+
+        // $inputString = "This is a :test string :with :db_19 multiple :placeholders :something.";
+
+        // Define the regular expression
+        // $pattern = '/:([^:\s]+)/';
+        // $pattern = '/:(\S+)/';
+        $pattern = '/:([a-zA-Z0-9_]+)/';
+
+        // Perform the match
+        preg_match_all($pattern, $sql, $matches);
+
+        // Output the entire matches including the colon
+        // print_r($matches[1]);
+
+
+        $binded = array();
+
+
+        foreach ($matches[1] as $placeholder) {
+
+            if ($binded[$placeholder] ?? false) continue;
+
+            $value = $payload[$placeholder] ?? null;
+
+            // print_r(' - ');
+            // print_r($placeholder);
+            // print_r(' - ');
+            // print_r(var_dump($value));
+
+            // Determine the parameter type
+            $paramType = PDO::PARAM_STR; // Default to string
+            if (is_int($value)) {
+                $paramType = PDO::PARAM_INT;
+            } elseif (is_bool($value)) {
+                $paramType = PDO::PARAM_BOOL;
+            } elseif (is_null($value)) {
+                $paramType = PDO::PARAM_NULL;
+            }
+
+            // Bind the parameter
+            $stmt->bindValue(":$placeholder", $value, $paramType);
+
+            $binded[$placeholder] = true;
+        }
+
+
+
+
+
+        // // Automatically bind parameters from the payload
+        // foreach ($payload as $placeholder => $value) {
+        //     // Determine the parameter type
+        //     $paramType = PDO::PARAM_STR; // Default to string
+        //     if (is_int($value)) {
+        //         $paramType = PDO::PARAM_INT;
+        //     } elseif (is_bool($value)) {
+        //         $paramType = PDO::PARAM_BOOL;
+        //     } elseif (is_null($value)) {
+        //         $paramType = PDO::PARAM_NULL;
+        //     }
+
+        //     // Bind the parameter
+        //     $stmt->bindValue(":$placeholder", $value, $paramType);
+        // }
+
+
+        return $stmt;
+    }
+
+
     public function execute($sqlPath, $payload)
     {
         // Assuming $pdo is your PDO connection object
@@ -47,24 +123,8 @@ class Db
         // Load the SQL query from the file
         $sql = file_get_contents(__DIR__ . '/../sql/' . $sqlPath . '.sql');
 
-        // Prepare the SQL statement
-        $stmt = $this->pdo->prepare($sql);
 
-        // Automatically bind parameters from the payload
-        foreach ($payload as $placeholder => $value) {
-            // Determine the parameter type
-            $paramType = PDO::PARAM_STR; // Default to string
-            if (is_int($value)) {
-                $paramType = PDO::PARAM_INT;
-            } elseif (is_bool($value)) {
-                $paramType = PDO::PARAM_BOOL;
-            } elseif (is_null($value)) {
-                $paramType = PDO::PARAM_NULL;
-            }
-
-            // Bind the parameter
-            $stmt->bindValue(":$placeholder", $value, $paramType);
-        }
+        $stmt = $this->getStmt($sql, $payload);
 
         // Execute the query
         $stmt->execute();
@@ -74,6 +134,8 @@ class Db
 
         // Use the results
         // echo '<pre>', print_r($results, true), '</pre>';
+
+        // print_r($results);
 
         return $results;
     }

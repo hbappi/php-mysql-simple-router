@@ -71,8 +71,8 @@ class Router
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: *'); // Adjust the CORS headers as needed
         // Output the JSON response
-        if ($result != null) {
-            echo $jsonResponse;
-        }
+        // if ($result != null) {
+        echo $jsonResponse;
+        // }
     }
 }
