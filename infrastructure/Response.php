@@ -26,6 +26,7 @@ class Response
 
     public function json($data)
     {
+        $this->addHeader('Content-Type', 'application/json');
         $this->setBody(json_encode($data));
         return $this;
     }
@@ -45,28 +46,19 @@ class Response
             header("$header: $value");
         }
 
-
-
         // Convert the array to JSON
         // $jsonResponse = json_encode($result);
         // Set HTTP headers to indicate JSON response
-        header('Content-Type: application/json');
-        header('Access-Control-Allow-Origin: *'); // Adjust the CORS headers as needed
+        // header('Content-Type: application/json');
         // Output the JSON response
         // if ($result != null) {
         // echo $jsonResponse;
-
-
 
         if (!is_string($this->body)) {
             $this->setBody(json_encode($this->body));
         }
 
-
         echo $this->body;
-
-
-
         exit;
     }
 }

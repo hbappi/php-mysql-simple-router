@@ -2,7 +2,7 @@
 
 class CookiesMiddleware extends Middleware
 {
-    public function handle(\Request $req,\Response $res, $next)
+    public function handle(\Request $req, \Response $res, $next)
     {
         // if ($request->cookies->has("")) {
         //     $cookies = $request->cookies->get("");
@@ -15,6 +15,8 @@ class CookiesMiddleware extends Middleware
         //     }
         // }
         // echo 'coockies middleware called';
+
+        // $res->json(['error' => 'cookies middleware called', 'message' => 'cookies middleware did\'t work'])->end();
 
         // $res->json([])->end();
 

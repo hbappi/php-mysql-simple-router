@@ -16,6 +16,8 @@ class TestMiddleware extends Middleware
         // }
         // echo 'test middleware called';
 
+        // $res->json(['error' => 'test middleware', 'message' => 'test middleware didn\'t passsed'])->end();
+
         // $res->json(['test' => 'middleware'])->end();
 
 

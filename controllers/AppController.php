@@ -1,8 +1,8 @@
 <?php
-class CategoryController extends Controller
+class AppController extends Controller
 {
 
-    public function paginate(\Request $req, \Response $res)
+    public function paginateApp(\Request $req, \Response $res)
     {
 
         // $payload = parent::getJsonBody();
@@ -10,21 +10,21 @@ class CategoryController extends Controller
 
         // return $payload;
 
-        parent::dbExec('__category_paginate', $payload, $res);
+        parent::dbExec('__app_paginate', $payload, $res);
 
 
         // $result =  parent::dbExec('__category_paginate', $payload); // returns ['ret_data', 'error']
         // $res->setBody($result)->end();
     }
-    public function upsert(\Request $req, \Response $res)
+    public function upsertApp(\Request $req, \Response $res)
     {
 
         $payload = $req->getJsonBody();
 
-        $categories = $payload['categories'] ?? [];
+        $categories = $payload['apps'] ?? [];
 
         foreach ($categories as $category) {
-            $result = parent::dbExec('__category_upsert', $category);
+            $result = parent::dbExec('__app_upsert', $category);
 
             if ($result['error'] ?? false) {
                 return $res->json($result)->end();
@@ -35,11 +35,11 @@ class CategoryController extends Controller
             'ret_data' => 'success'
         ])->end();
     }
-    public function delete($req, $res)
+    public function deleteApp($req, $res)
     {
         $payload = $req->getJsonBody();
 
-        $result = parent::dbExec('__category_delete', $payload);
+        $result = parent::dbExec('__app_delete', $payload);
         
         if ($result['error'] ?? false) {
             return $res->json($result)->end();
