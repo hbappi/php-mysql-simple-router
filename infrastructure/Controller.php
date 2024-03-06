@@ -7,21 +7,27 @@ class Controller
     {
     }
 
-    public function dbExec($fn, $payload = array())
+    public function dbExec($fn, $payload = array(), \Response $res = null)
     {
         // call naz.route($fn, $payload ,'{}', @out); select @out;
-        return Db::getInstance()->execute($fn, $payload);
-    }
-    public function getJsonBody()
-    {
-        $jsonData = array();
 
-        $entityBody = file_get_contents('php://input');
+        $result =  Db::getInstance()->execute($fn, $payload);
 
-        if (!empty($entityBody)) {
-            $jsonData = json_decode($entityBody, true);
+        if (isset($res)) {
+            return $res->json($result)->send();
         }
-
-        return $jsonData;
+        return $result;
     }
+    // public function getJsonBody()
+    // {
+    //     $jsonData = array();
+
+    //     $entityBody = file_get_contents('php://input');
+
+    //     if (!empty($entityBody)) {
+    //         $jsonData = json_decode($entityBody, true);
+    //     }
+
+    //     return $jsonData;
+    // }
 }

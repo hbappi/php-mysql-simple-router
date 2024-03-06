@@ -21,6 +21,9 @@ class Router
 
     private static $instance = null;
 
+    private $mws = array();
+    private $handler = null;
+
 
 
     public static function getInstance()
@@ -195,9 +198,33 @@ class Router
         $dest->handler = $handler;
     }
 
-    public function dispatch($method, $path)
+    public function getClassNameAfterImport($parentPath, $classPath)
     {
 
+        $parts = explode('/', $classPath);
+        // Get the last part
+        $className = end($parts);
+
+        $fullPath =  __DIR__ . '/../' . $parentPath . '/' . $classPath . '.php';
+
+        if (!file_exists($fullPath)) {
+            echo "404  $fullPath file not found";
+            return;
+        }
+
+        AutoLoader::requireFileOnce($fullPath);
+
+        return $className;
+    }
+    public function dispatch()
+    {
+
+        //init request and response object;
+        $request = new Request();
+        $response = new Response();
+
+        $method = $request->method;
+        $path = $request->url;
 
         $dest = $this->getSafeDestination($method, $path);
 
@@ -206,8 +233,6 @@ class Router
             return;
         }
 
-        $mws = $dest->mws;
-        $handler = $dest->handler;
 
 
         // echo 'middleware found : ' . json_encode($mws);
@@ -228,53 +253,89 @@ class Router
 
         // $handler = $routes['GET']['/test'];
 
-        if (count($handler) != 2) {
+        //run middlewares................................................................
+
+
+
+
+        $this->mws = $dest->mws;
+        $this->handler = $dest->handler;
+
+
+        if (count($this->handler) != 2) {
             echo '500 Internal Server Error';
             return;
         }
 
 
-        // $handler now contains ['HomeController', 'index']
-        $controllerClassPath = $handler[0];
-        // $controllerClass = $handler[0];
-        $methodName = $handler[1];
 
-        $parts = explode('/', $controllerClassPath);
-        // Get the last part
-        $controllerClass = end($parts);
+        $this->next($request, $response);
 
-        $fullPath =  __DIR__ . '/../controllers/' . $controllerClassPath . '.php';
 
-        if (!file_exists($fullPath)) {
-            echo "404  $fullPath file not found";
-            return;
-        }
-
-        AutoLoader::requireFileOnce($fullPath);
-
-        // Using the autoloader to dynamically load the controller class
-        if (!class_exists($controllerClass)) {
-            echo '404 Controller Not Found';
-            return;
-        }
-
-        $controllerInstance = new $controllerClass();
-
-        if (!method_exists($controllerInstance, $methodName)) {
-            echo '404 Method Not Found';
-            return;
-        }
-
-        $result =  $controllerInstance->$methodName();
-
-        // Convert the array to JSON
-        $jsonResponse = json_encode($result);
-        // Set HTTP headers to indicate JSON response
-        header('Content-Type: application/json');
-        header('Access-Control-Allow-Origin: *'); // Adjust the CORS headers as needed
-        // Output the JSON response
-        // if ($result != null) {
-        echo $jsonResponse;
+        // $controllerInstance->$methodName($request, $response);
         // }
+    }
+
+    function next($req, $res)
+    {
+
+
+        if (count($this->mws) == 0) {
+
+
+
+            // $handler now contains ['HomeController', 'index']
+            $controllerClassPath = $this->handler[0];
+            // $controllerClass = $handler[0];
+            $methodName = $this->handler[1];
+
+            $controllerClass = $this->getClassNameAfterImport(
+                'controllers',
+                $controllerClassPath
+            );
+
+            // Using the autoloader to dynamically load the controller class
+            if (!class_exists($controllerClass)) {
+                echo '404 Controller Not Found';
+                return;
+            }
+
+            $controllerInstance = new $controllerClass();
+
+            if (!method_exists($controllerInstance, $methodName)) {
+                echo '404 Method Not Found';
+                return;
+            }
+
+            $controllerInstance->$methodName($req, $res);
+
+            return;
+        }
+
+        // if (!is_callable($this->mws[0])) {
+        //     echo '500 Internal Server Error';
+        //     echo json_encode($this->mws);
+        //     return;
+        // }
+
+        $mwClassPath = array_shift($this->mws);
+
+
+        $mwClass = $this->getClassNameAfterImport(
+            'middlewares',
+            $mwClassPath
+        );
+
+        $mw = new $mwClass();
+
+        if (!method_exists($mw, 'handle')) {
+            echo '500. Internal Server Error : Invalid Middleware.';
+            return;
+        }
+
+
+        $mw->handle($req, $res, function ($req, $res) {
+            $this->next($req, $res);
+        });
     }
 }

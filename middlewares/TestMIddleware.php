@@ -1,8 +1,8 @@
 <?php
 
-class CookiesMiddleware extends Middleware
+class TestMiddleware extends Middleware
 {
-    public function handle(\Request $req,\Response $res, $next)
+    public function handle(\Request $req, \Response $res, $next)
     {
         // if ($request->cookies->has("")) {
         //     $cookies = $request->cookies->get("");
@@ -14,9 +14,10 @@ class CookiesMiddleware extends Middleware
         //         }
         //     }
         // }
-        // echo 'coockies middleware called';
+        // echo 'test middleware called';
 
-        // $res->json([])->end();
+        // $res->json(['test' => 'middleware'])->end();
+
 
         return $next($req, $res);
     }
