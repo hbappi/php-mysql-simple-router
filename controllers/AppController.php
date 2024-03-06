@@ -10,10 +10,10 @@ class AppController extends Controller
 
         // return $payload;
 
-        parent::dbExec('__app_paginate', $payload, $res);
+        parent::dbExec('app__paginate', $payload, $res);
 
 
-        // $result =  parent::dbExec('__category_paginate', $payload); // returns ['ret_data', 'error']
+        // $result =  parent::dbExec('category__paginate', $payload); // returns ['ret_data', 'error']
         // $res->setBody($result)->end();
     }
     public function upsertApp(\Request $req, \Response $res)
@@ -24,7 +24,7 @@ class AppController extends Controller
         $categories = $payload['apps'] ?? [];
 
         foreach ($categories as $category) {
-            $result = parent::dbExec('__app_upsert', $category);
+            $result = parent::dbExec('app__upsert', $category);
 
             if ($result['error'] ?? false) {
                 return $res->json($result)->end();
@@ -39,7 +39,7 @@ class AppController extends Controller
     {
         $payload = $req->getJsonBody();
 
-        $result = parent::dbExec('__app_delete', $payload);
+        $result = parent::dbExec('app__delete', $payload);
         
         if ($result['error'] ?? false) {
             return $res->json($result)->end();

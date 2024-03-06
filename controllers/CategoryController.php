@@ -10,10 +10,10 @@ class CategoryController extends Controller
 
         // return $payload;
 
-        parent::dbExec('__category_paginate', $payload, $res);
+        parent::dbExec('category__paginate', $payload, $res);
 
 
-        // $result =  parent::dbExec('__category_paginate', $payload); // returns ['ret_data', 'error']
+        // $result =  parent::dbExec('category__paginate', $payload); // returns ['ret_data', 'error']
         // $res->setBody($result)->end();
     }
     public function upsert(\Request $req, \Response $res)
@@ -24,7 +24,7 @@ class CategoryController extends Controller
         $categories = $payload['categories'] ?? [];
 
         foreach ($categories as $category) {
-            $result = parent::dbExec('__category_upsert', $category);
+            $result = parent::dbExec('category__upsert', $category);
 
             if ($result['error'] ?? false) {
                 return $res->json($result)->end();
@@ -39,8 +39,8 @@ class CategoryController extends Controller
     {
         $payload = $req->getJsonBody();
 
-        $result = parent::dbExec('__category_delete', $payload);
-        
+        $result = parent::dbExec('category__delete', $payload);
+
         if ($result['error'] ?? false) {
             return $res->json($result)->end();
         }
