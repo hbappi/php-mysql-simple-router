@@ -1,4 +1,4 @@
-insert into naz.category (
+insert into category (
         category_id,
         title,
         child_type,

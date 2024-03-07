@@ -37,6 +37,14 @@ class Db
     private function getStmt($sql, $payload)
     {
 
+
+        if (isset($payload['limit'])) {
+            if ($payload['limit'] == -1) {
+                $payload['limit'] = 9999999999;
+            }
+        }
+
+
         // Prepare the SQL statement
         $stmt = $this->pdo->prepare($sql);
 

@@ -1,4 +1,4 @@
-insert into naz.app (
+insert into app (
         app_id,
         api_key,
         title,

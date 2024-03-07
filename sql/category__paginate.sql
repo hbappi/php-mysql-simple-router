@@ -1,5 +1,5 @@
 select c.*
-from naz.category c
+from category c
 where (
 		coalesce(:search_query, '') = ''
 		or c.title like concat('%', :search_query, '%')

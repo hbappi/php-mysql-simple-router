@@ -1,6 +1,15 @@
 <?php
 
 
+class HeadController extends Controller
+{
+
+    public function method($req, \Response $res)
+    {
+        // echo 'hi ============================================';
+        $res->end();
+    }
+}
 
 class Route
 {
@@ -59,17 +68,54 @@ class Router
     {
         $middlewares = array();
 
-        if (is_array($dest->middleware)) {
+        if (isset($dest) && is_array($dest->middleware)) {
             $middlewares =  $dest->middleware;
         }
 
         return $middlewares;
     }
 
-    function getSafeDestination($method, $path)
+
+    function getMiddlewares($path)
     {
 
         $middlewares = array();
+
+        $method = 'MW';
+
+        if (isset($this->childs[$method])) {
+            $dest = $this->childs[$method];
+        }
+
+        if (!isset($dest)) {
+            return $middlewares;
+        }
+
+
+        $parts = $this->getParts($path);
+
+        // return $middlewares;
+
+        foreach ($parts as $part) {
+            // if (!isset($dest->childs[$part])) {
+            //     $dest =  null;
+            //     $middlewares = array();
+            //     break;
+            // }
+
+            if (isset($dest) && isset($dest->childs[$part])) {
+
+                $dest = $dest->childs[$part];
+                $middlewares = array_merge($middlewares,  $this->getMiddlewaresFromDestination($dest));
+            }
+        }
+
+
+        return $middlewares;
+    }
+    function getSafeDestination($method, $path)
+    {
+
 
         if (isset($this->childs[$method])) {
             $dest = $this->childs[$method];
@@ -88,12 +134,12 @@ class Router
         foreach ($parts as $part) {
             if (!isset($dest->childs[$part])) {
                 $dest =  null;
-                $middlewares = array();
+                // $middlewares = array();
                 break;
             }
 
             $dest = $dest->childs[$part];
-            $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
+            // $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
         }
 
 
@@ -118,20 +164,20 @@ class Router
                 }
 
                 $dest = $dest->childs[$part];
-                $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
+                // $middlewares = array_merge($middlewares, $this->getMiddlewaresFromDestination($dest));
             }
         }
 
 
 
-        if (isset($dest)) {
+        // if (isset($dest)) {
 
-            $dest->mws = $middlewares;
+        //     // $dest->mws = $middlewares;
 
-            if (!isset($dest->fullpath)) {
-                $dest->fullpath = $path;
-            }
-        }
+        //     if (!isset($dest->fullpath)) {
+        //         $dest->fullpath = $path;
+        //     }
+        // }
 
 
 
@@ -165,7 +211,7 @@ class Router
     }
     function use($path, $middlewares)
     {
-        $dest = $this->getVerboseDestination('POST', $path);
+        $dest = $this->getVerboseDestination('MW', $path);
         if (!isset($dest->middleware)) {
             $dest->middleware = array();
         }
@@ -198,7 +244,7 @@ class Router
         $dest->handler = $handler;
     }
 
-    public function getClassNameAfterImport($parentPath, $classPath)
+    public function getClassNameAfterImport($parentPath, $classPath, $res)
     {
 
         $parts = explode('/', $classPath);
@@ -208,9 +254,13 @@ class Router
         $fullPath =  __DIR__ . '/../' . $parentPath . '/' . $classPath . '.php';
 
         if (!file_exists($fullPath)) {
-            echo "404  $fullPath file not found";
-            return;
+            return null;
+            // $res->setStatusCode(404)
+            //     ->setBody("404  $fullPath file not found")
+            //     ->end();
+            // exit;
         }
+        
 
         AutoLoader::requireFileOnce($fullPath);
 
@@ -226,45 +276,41 @@ class Router
         $method = $request->method;
         $path = $request->url;
 
-        $dest = $this->getSafeDestination($method, $path);
+        // echo $method;
 
-        if (!isset($dest) || !is_array($dest->handler)) {
-            echo "404 : '$method:$path' Path Not Found";
-            return;
+        if ($method == "HEAD") {
+            $dest = new Route();
+            $dest->handler = [HeadController::class, 'method'];
+        } else {
+            $dest = $this->getSafeDestination($method, $path);
         }
 
 
 
-        // echo 'middleware found : ' . json_encode($mws);
+        if ((!isset($dest) || !is_array($dest->handler))) {
+            $response->setStatusCode(404)
+                ->setBody("404 : '$method:$path' Path Not Found")
+                ->end();
 
+            exit;
+        }
 
-        // //check whether route added with or without trailing slash.
-        // if (!isset($routes[$method][$path])) {
-        //     if (!isset($routes[$method][$path . '/'])) {
-        //         echo '404 Not Found';
-        //         return;
-        //     } else {
-        //         $path = $path . '/';
-        //     }
-        // }
-
-
-        // $handler = $routes[$method][$path];
-
-        // $handler = $routes['GET']['/test'];
 
         //run middlewares................................................................
 
+        // return null;
 
-
-
-        $this->mws = $dest->mws;
+        // $this->mws = $dest->mws;
+        $this->mws = $this->getMiddlewares($path);
         $this->handler = $dest->handler;
 
-
         if (count($this->handler) != 2) {
-            echo '500 Internal Server Error';
-            return;
+
+            $response->setStatusCode(500)
+                ->setBody('500 Internal Server Error')
+                ->end();
+
+            exit;
         }
 
 
@@ -289,22 +335,33 @@ class Router
             // $controllerClass = $handler[0];
             $methodName = $this->handler[1];
 
-            $controllerClass = $this->getClassNameAfterImport(
+            $controllerClass = class_exists($controllerClassPath) ? $controllerClassPath : $this->getClassNameAfterImport(
                 'controllers',
-                $controllerClassPath
+                $controllerClassPath,
+                $res
             );
 
             // Using the autoloader to dynamically load the controller class
             if (!class_exists($controllerClass)) {
-                echo '404 Controller Not Found';
-                return;
+
+                $res->setStatusCode(404)
+                    ->setBody('404 Controller Not Found')
+                    ->end();
+
+
+                exit;
             }
 
             $controllerInstance = new $controllerClass();
 
             if (!method_exists($controllerInstance, $methodName)) {
-                echo '404 Method Not Found';
-                return;
+
+                $res->setStatusCode(404)
+                    ->setBody('404 Method Not Found')
+                    ->end();
+
+
+                exit;
             }
 
             $controllerInstance->$methodName($req, $res);
@@ -318,19 +375,24 @@ class Router
         //     return;
         // }
 
+
         $mwClassPath = array_shift($this->mws);
 
 
         $mwClass = $this->getClassNameAfterImport(
             'middlewares',
-            $mwClassPath
+            $mwClassPath,
+            $res
         );
 
         $mw = new $mwClass();
 
         if (!method_exists($mw, 'handle')) {
-            echo '500. Internal Server Error : Invalid Middleware.';
-            return;
+
+            $res->setStatusCode(500)
+                ->setBody('500. Internal Server Error : Invalid Middleware.')
+                ->end();
+            exit;
         }
 
 
